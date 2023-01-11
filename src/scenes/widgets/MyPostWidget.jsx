@@ -22,39 +22,43 @@ import FlexBetween from "components/FlexBetween";
 import Dropzone from "react-dropzone";
 import UserImage from "components/UserImage";
 import WidgetWrapper from "components/WidgetWrapper";
-import { useState ,useRef, useEffect} from "react";
+import { useState, useRef, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { setPosts } from "state";
 import { height } from "@mui/system";
+import AxiosPrivate from "api/AxiosPrivate";
 
 const MyPostWidget = ({ picturePath }) => {
   const dispatch = useDispatch();
-  const [isImage, setIsImage] = useState(false);
+  const axios = AxiosPrivate();
   const [image, setImage] = useState(null);
   const [post, setPost] = useState("");
-  const[imageUrl,setImageUrl]= useState("")
-  const cloudinaryRef =useRef();
-  const widgetRef= useRef();
+  const [imageUrl, setImageUrl] = useState("");
+  const cloudinaryRef = useRef();
+  const widgetRef = useRef();
   const { palette } = useTheme();
   const { _id } = useSelector((state) => state.user);
   const token = useSelector((state) => state.token);
   const isNonMobileScreens = useMediaQuery("(min-width:1000px)");
   const mediumMain = palette.neutral.mediumMain;
   const medium = palette.neutral.medium;
-  useEffect(()=>{
-    console.log(window.cloudinary);
-  cloudinaryRef.current = window.cloudinary;
-  widgetRef.current = cloudinaryRef.current.createUploadWidget({ 
-    cloudName: "dz2alt1qc", uploadPreset: "vuskqirj",multiple: false,clientAllowedFormats: ["images", "png", "webp", "jpeg"] }, (error, result) => { 
+  useEffect(() => {
+    cloudinaryRef.current = window.cloudinary;
+    widgetRef.current = cloudinaryRef.current.createUploadWidget(
+      {
+        cloudName: "dz2alt1qc",
+        uploadPreset: "vuskqirj",
+        multiple: false,
+        clientAllowedFormats: ["images", "png", "webp", "jpeg"],
+      },
+      (error, result) => {
         if (!error && result && result.event === "success") {
           // console.log("Done! Here is the image info: ", result.info);
           setImageUrl(result.info.secure_url);
-     
         }
-      
-    });
-
-  },[])
+      }
+    );
+  }, []);
   const handlePost = async () => {
     const formData = new FormData();
     formData.append("userId", _id);
@@ -62,17 +66,16 @@ const MyPostWidget = ({ picturePath }) => {
     if (imageUrl) {
       // formData.append("picture", image);
       // formData.append("picturePath", image.name);
-      formData.append("picturePath",imageUrl)
+      formData.append("picturePath", imageUrl);
     }
 
-    const response = await fetch(`http://localhost:3001/posts`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${token}` },
-      body: formData,
-    });
-    const posts = await response.json();
+    const response = await axios.post(
+      `/posts`,
+      formData
+    );
+    const posts = response.data
     dispatch(setPosts({ posts }));
-    setImageUrl("")
+    setImageUrl("");
     setImage(null);
     setPost("");
   };
@@ -90,6 +93,8 @@ const MyPostWidget = ({ picturePath }) => {
             backgroundColor: palette.neutral.light,
             borderRadius: "2rem",
             padding: "1rem 2rem",
+            transition: "all ease-in-out 0.2s",
+            "&:hover": { transform: "scale(1.1)" },
           }}
         />
       </FlexBetween>
@@ -137,59 +142,69 @@ const MyPostWidget = ({ picturePath }) => {
         </Box>
       )} */}
 
-        <Divider sx={{margin: "1.25rem 0"}} />
+      <Divider sx={{ margin: "1.25rem 0" }} />
 
-        <FlexBetween>
-            {/* <FlexBetween gap="0.25rem" onClick={() => setIsImage(!isImage)}> */}
-            <FlexBetween gap="0.25rem" onClick={() => widgetRef.current.open()}>
-
-                <ImageOutlined sx={{color: mediumMain}} />
-                <Typography
-                color={mediumMain}
-                sx={{"&:hover": {cursor: "pointer" , color: medium}}}
-                >
-                 Image
-                </Typography>
-            </FlexBetween>
-
-           {isNonMobileScreens ? (
-            <>
-            <FlexBetween gap="0.25rem">
-                <GifBoxOutlined sx={{color: mediumMain}} />
-                <Typography color={mediumMain}>Clips</Typography>
-            </FlexBetween>
-
-            <FlexBetween gap="0.25rem">
-                <AttachFileOutlined sx={{color: mediumMain}} />
-                <Typography color={mediumMain}>Attachment</Typography>
-            </FlexBetween>
-            
-            <FlexBetween gap="0.25rem">
-                <MicOutlined sx={{color: mediumMain}} />
-                <Typography color={mediumMain}>Audio</Typography>
-            </FlexBetween>
-            </>
-           ) :( 
-           <FlexBetween gap="0.25rem">
-            <MoreHorizOutlined sx={{color: mediumMain}} />
-            </FlexBetween>
-            )} 
-
-            <Button
-            disabled={!post}
-            onClick={handlePost}
-            sx={{
-                color: palette.background.alt,
-                backgroundColor: palette.primary.main,
-                borderRadius: "3rem"
-            }}
-            >
-                POST
-            </Button>
+      <FlexBetween>
+        {/* <FlexBetween gap="0.25rem" onClick={() => setIsImage(!isImage)}> */}
+        <FlexBetween gap="0.25rem" onClick={() => widgetRef.current.open()}>
+          <ImageOutlined sx={{ color: mediumMain }} />
+          <Typography
+            color={mediumMain}
+            sx={{ "&:hover": { cursor: "pointer", color: medium } }}
+          >
+            Image
+          </Typography>
         </FlexBetween>
-        {imageUrl && (<div style={{}} >
-          <img style={{position: "relative", width:"100%", height: "auto", objectFit: "cover"}} src={imageUrl} alt="" />
-        </div>)}
+{/* 
+        {isNonMobileScreens ? (
+          <>
+            <FlexBetween gap="0.25rem">
+              <GifBoxOutlined sx={{ color: mediumMain }} />
+              <Typography color={mediumMain}>Clips</Typography>
+            </FlexBetween>
+
+            <FlexBetween gap="0.25rem">
+              <AttachFileOutlined sx={{ color: mediumMain }} />
+              <Typography color={mediumMain}>Attachment</Typography>
+            </FlexBetween>
+
+            <FlexBetween gap="0.25rem">
+              <MicOutlined sx={{ color: mediumMain }} />
+              <Typography color={mediumMain}>Audio</Typography>
+            </FlexBetween>
+          </>
+        ) : (
+          <FlexBetween gap="0.25rem">
+            <MoreHorizOutlined sx={{ color: mediumMain }} />
+          </FlexBetween>
+        )} */}
+
+        <Button
+          disabled={!post}
+          onClick={handlePost}
+          sx={{
+            color: palette.background.alt,
+            backgroundColor: palette.primary.main,
+            borderRadius: "3rem",
+          }}
+        >
+          POST
+        </Button>
+      </FlexBetween>
+      {imageUrl && (
+        <div style={{}}>
+          <img
+            style={{
+              position: "relative",
+              width: "100%",
+              height: "auto",
+              objectFit: "cover",
+            }}
+            src={imageUrl}
+            alt=""
+          />
+        </div>
+      )}
     </WidgetWrapper>
   );
 };

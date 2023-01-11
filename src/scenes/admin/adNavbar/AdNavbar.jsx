@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   Box,
   IconButton,
@@ -11,31 +11,23 @@ import {
   useMediaQuery,
 } from "@mui/material";
 import {
-  Search,
-  Message,
   DarkMode,
   LightMode,
-  Notifications,
-  Help,
   Menu,
   Close,
 } from "@mui/icons-material";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch, } from "react-redux";
 import { setMode, setLogout } from "state";
 import { useNavigate } from "react-router-dom";
 import FlexBetween from "components/FlexBetween";
-import Notification from "components/Notification";
-import AxiosPrivate from "api/AxiosPrivate";
+import { toast } from "react-hot-toast";
 
-const Navbar = ({ setSearch, setFocus }) => {
+
+const AdNavbar = () => {
   const [isMobileMenuToggled, setIsMobileMenuToggled] = useState(false);
-  const [value, setValue] = useState("");
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const axios = AxiosPrivate();
-  const user = useSelector((state) => state.user);
   const isNonMobileScreens = useMediaQuery("(min-width:1000px)");
-  const [showNotification, setShowNotification] = useState(false);
 
   const theme = useTheme();
   const neutralLight = theme.palette.neutral.light;
@@ -43,32 +35,10 @@ const Navbar = ({ setSearch, setFocus }) => {
   const background = theme.palette.background.default;
   const primaryLight = theme.palette.primary.light;
   const alt = theme.palette.background.alt;
-
-  const fullName = `${user?.firstName} ${user?.lastName}`;
-  useEffect(() => {
-    let isMount = true;
-    const controller = new AbortController();
-    const fetchUsers = async () => {
-      try {
-        const { data } = await axios.get(`/users?search=${value}`, {
-          signal: controller.signal,
-        });
-        setSearch(data);
-      } catch (error) {}
-    };
-    if (isMount) fetchUsers();
-    return () => {
-      isMount = false;
-      controller.abort();
-    };
-  }, [value]);
-
-  const handleChange = (e) => {
-    setValue(e.target.value);
-  };
-  const handleToggle = ()=>{
-setFocus(prev=>!prev)
-  }
+const hanldeLogOut = ()=>{
+  dispatch(setLogout())
+  navigate('/admin')
+}
 
   return (
     <FlexBetween
@@ -76,17 +46,13 @@ setFocus(prev=>!prev)
       backgroundColor={alt}
       sx={{ position: "sticky", top: "0", zIndex: "999" }}
     >
-      {showNotification && (
-        <div className="myNotification">
-          <Notification />
-        </div>
-      )}
+      
       <FlexBetween gap="1.75rem">
         <Typography
           fontWeight="bold"
           fontSize="clamp(1rem, 2rem, 2.5rem) "
           color="primary"
-          onClick={() => navigate("/home")}
+          onClick={() => navigate("/admin/home")}
           sx={{
             "&:hover": {
               color: primaryLight,
@@ -94,7 +60,7 @@ setFocus(prev=>!prev)
             },
           }}
         >
-          FunSkoot
+          FunSkoot Admin
         </Typography>
         {isNonMobileScreens && (
           <FlexBetween
@@ -103,13 +69,6 @@ setFocus(prev=>!prev)
             gap="3rem"
             padding="0.1rem 1.5rem"
           >
-            <InputBase
-              placeholder="Search..."
-              onInput={handleChange}
-            />
-            <IconButton onClick={handleToggle}>
-              <Search />
-            </IconButton>
           </FlexBetween>
         )}
       </FlexBetween>
@@ -124,18 +83,11 @@ setFocus(prev=>!prev)
               <LightMode sx={{ color: dark, fontSize: "25px" }} />
             )}
           </IconButton>
-          <Message
-            sx={{ fontSize: "25px", cursor: "pointer" }}
-            onClick={() => navigate("/chat")}
-          />
-          <Notifications
-            sx={{ fontSize: "25px" }}
-            onClick={() => setShowNotification((pre) => !pre)}
-          />
-          <Help sx={{ fontSize: "25px" }} />
-          <FormControl variant="standard" value={fullName}>
+          
+         
+          <FormControl variant="standard" value={"Admin"}>
             <Select
-              value={fullName}
+              value={"Admin"}
               sx={{
                 backgroundColor: neutralLight,
                 width: "150px",
@@ -151,10 +103,10 @@ setFocus(prev=>!prev)
               }}
               input={<InputBase />}
             >
-              <MenuItem value={fullName}>
-                <Typography>{fullName}</Typography>
+              <MenuItem value={"Admin"}>
+                <Typography>{"Admin"}</Typography>
               </MenuItem>
-              <MenuItem onClick={() => dispatch(setLogout())}>Log Out</MenuItem>
+              <MenuItem onClick={hanldeLogOut}>Log Out</MenuItem>
             </Select>
           </FormControl>
         </FlexBetween>
@@ -205,18 +157,11 @@ setFocus(prev=>!prev)
                 <LightMode sx={{ color: dark, fontSize: "25px" }} />
               )}
             </IconButton>
-            <Message
-              sx={{ fontSize: "25px" }}
-              onClick={() => navigate("/chat")}
-            />
-            <Notifications
-              sx={{ fontSize: "25px" }}
-              onClick={() => setShowNotification((pre) => !pre)}
-            />
-            <Help sx={{ fontSize: "25px" }} />
-            <FormControl variant="standard" value={fullName}>
+           
+            
+            <FormControl variant="standard" value={"Admin"}>
               <Select
-                value={fullName}
+                value={"Admin"}
                 sx={{
                   backgroundColor: neutralLight,
                   width: "150px",
@@ -232,10 +177,10 @@ setFocus(prev=>!prev)
                 }}
                 input={<InputBase />}
               >
-                <MenuItem value={fullName}>
-                  <Typography>{fullName}</Typography>
+                <MenuItem value={"Admin"}>
+                  <Typography>{"Admin"}</Typography>
                 </MenuItem>
-                <MenuItem onClick={() => dispatch(setLogout())}>
+                <MenuItem onClick={hanldeLogOut}>
                   Log Out
                 </MenuItem>
               </Select>
@@ -247,4 +192,4 @@ setFocus(prev=>!prev)
   );
 };
 
-export default Navbar;
+export default AdNavbar;

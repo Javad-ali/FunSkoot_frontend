@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import {
   Box,
@@ -16,6 +15,12 @@ import { useDispatch } from "react-redux";
 import { setLogin } from "state";
 import Dropzone from "react-dropzone";
 import FlexBetween from "components/FlexBetween";
+import { toast } from "react-toastify";
+import otpApi from "../../api/otpRequest";
+import axios from "axios";
+import AxiosPublic from "api/AxiosPublic";
+import { baseurl } from "constant";
+
 
 const registerSchema = yup.object().shape({
   firstName: yup.string().required("required"),
@@ -48,6 +53,7 @@ const initialValuesLogin = {
 };
 
 const Form = () => {
+  const axios = AxiosPublic();
   const [pageType, setPageType] = useState("login");
   const { palette } = useTheme();
   const dispatch = useDispatch();
@@ -59,43 +65,68 @@ const Form = () => {
   const register = async (values, onSubmitProps) => {
     // this allows us to send form info with image
     const formData = new FormData();
+    const form2 = new FormData();
+
     for (let value in values) {
       formData.append(value, values[value]);
     }
-    formData.append("picturePath", values.picture.name);
+    form2.append("file", values.picture);
 
-    const savedUserResponse = await fetch(
-      "http://localhost:3001/auth/register",
+    form2.append("upload_preset", "vuskqirj");
+    const response = await fetch(
+      `https://api.cloudinary.com/v1_1/dz2alt1qc/image/upload`,
       {
         method: "POST",
-        body: formData,
+
+        body: form2,
       }
     );
-    const savedUser = await savedUserResponse.json();
-    onSubmitProps.resetForm();
+    const data = await response.json();
+    console.log(data.secure_url);
+    if (data) formData.append("picturePath", data.secure_url);
 
-    if (savedUser) {
-      setPageType("login");
-    }
+    const savedUserResponse = await axios
+      .post("/auth/register", formData)
+      .then(async (e) => {
+        toast.success(
+          "account created successfully ,please verify your account"
+        );
+        await axios
+          .get(`/auth/otp?email=${e.data.email}`)
+          .then((res) => {
+            navigate("/otp", { state: { email: e.data.email } });
+          });
+      })
+      .catch((e) => {
+        if (e.response.status === 400) {
+          toast.error("user already exist");
+        }
+        onSubmitProps.resetForm();
+      });
   };
 
   const login = async (values, onSubmitProps) => {
-    const loggedInResponse = await fetch("http://localhost:3001/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(values),
-    });
-    const loggedIn = await loggedInResponse.json();
-    onSubmitProps.resetForm();
-    if (loggedIn) {
-      dispatch(
-        setLogin({
-          user: loggedIn.user,
-          token: loggedIn.token,
-        })
-      );
-      navigate("/home");
-    }
+    await axios
+      .post("/auth/login", values)
+      .then((e) => {
+        onSubmitProps.resetForm();
+        dispatch(
+          setLogin({
+            user: e.data.user,
+            token: e.data.token,
+          })
+        );
+        toast.success("login successfully");
+        navigate("/home");
+      })
+      .catch((e) => {
+        console.log(e);
+        if (e.response.status === 401) {
+          toast.error(e.response.data.message);
+        } else {
+          toast.error("invalid email or password");
+        }
+      });
   };
 
   const handleFormSubmit = async (values, onSubmitProps) => {

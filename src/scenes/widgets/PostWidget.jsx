@@ -1,16 +1,33 @@
 import {
   ChatBubbleOutlineOutlined,
+  Delete,
   FavoriteBorderOutlined,
   FavoriteOutlined,
+  Send,
   ShareOutlined,
 } from "@mui/icons-material";
-import { Box, Divider, IconButton, Typography, useTheme } from "@mui/material";
+import {
+  Avatar,
+  Box,
+  Divider,
+  Grid,
+  IconButton,
+  Input,
+  Paper,
+  Typography,
+  useTheme,
+} from "@mui/material";
 import FlexBetween from "components/FlexBetween";
 import Friend from "components/Friend";
 import WidgetWrapper from "components/WidgetWrapper";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { format } from "timeago.js";
 import { setPost } from "state";
+import { toast, Toaster } from "react-hot-toast";
+import PostMenu from "components/PostMenu";
+import { baseurl } from "constant";
+
 
 const PostWidget = ({
   postId,
@@ -22,6 +39,7 @@ const PostWidget = ({
   userPicturePath,
   likes,
   comments,
+  date,
 }) => {
   const [isComments, setIsComments] = useState(false);
   const dispatch = useDispatch();
@@ -29,13 +47,14 @@ const PostWidget = ({
   const loggedInUserId = useSelector((state) => state.user._id);
   const isLiked = Boolean(likes[loggedInUserId]);
   const likeCount = Object.keys(likes).length;
+  const commentref = useRef();
 
   const { palette } = useTheme();
   const main = palette.neutral.main;
   const primary = palette.primary.main;
 
   const patchLike = async () => {
-    const response = await fetch(`http://localhost:3001/posts/${postId}/like`, {
+    const response = await fetch(`${baseurl}/posts/${postId}/like`, {
       method: "PATCH",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -47,14 +66,86 @@ const PostWidget = ({
     dispatch(setPost({ post: updatedPost }));
   };
 
+  const createComment = async () => {
+    if (commentref.current.firstChild.value === "") return null;
+    const response = await fetch(
+      `${baseurl}/posts/${postId}/comment`,
+      {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId: loggedInUserId,
+          comment: commentref.current.firstChild.value,
+        }),
+      }
+    );
+    commentref.current.firstChild.value = "";
+    const updatedPost = await response.json();
+
+    dispatch(setPost({ post: updatedPost }));
+  };
+
+  const deleteComment = async (comment) => {
+    const response = await fetch(
+      `${baseurl}/posts/${postId}/deleteComment`,
+      {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ userId: loggedInUserId, comment }),
+      }
+    );
+    const updatedPost = await response.json();
+    dispatch(setPost({ post: updatedPost }));
+  };
+
+  const deletePost = async () => {
+    toast.error("please wait deleting post");
+    const response = await fetch(
+      `${baseurl}/posts/${postId}/deletePost`,
+      {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ userId: loggedInUserId }),
+      }
+    );
+    // toast.dismiss()
+    toast.success("post deleted successfully");
+    const updatedPost = await response.json();
+    dispatch(setPost({ post: updatedPost }));
+  };
+
   return (
     <WidgetWrapper m="2rem 0">
-      <Friend
-        friendId={postUserId}
-        name={name}
-        subtitle={location}
-        userPicturePath={userPicturePath}
-      />
+      <Toaster />
+
+      <div
+        className=""
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "flex-start",
+        }}
+      >
+        <Friend
+          name={name}
+          subtitle={`${location}   `}
+          userPicturePath={userPicturePath}
+          date={format(date)}
+          userId={postUserId}
+        />
+        <FlexBetween>
+          <PostMenu id={postId} userid={postUserId} deletePost={deletePost} />
+        </FlexBetween>
+      </div>
       <Typography color={main} sx={{ mt: "1rem" }}>
         {description}
       </Typography>
@@ -63,7 +154,12 @@ const PostWidget = ({
           width="100%"
           height="auto"
           alt="post"
-          style={{ borderRadius: "0.75rem", marginTop: "0.75rem" }}
+          style={{
+            borderRadius: "0.75rem",
+            marginTop: "0.75rem",
+            maxHeight: "500px",
+            objectFit: "cover",
+          }}
           src={`${picturePath}`}
         />
       )}
@@ -84,25 +180,70 @@ const PostWidget = ({
             <IconButton onClick={() => setIsComments(!isComments)}>
               <ChatBubbleOutlineOutlined />
             </IconButton>
+
             <Typography>{comments.length}</Typography>
           </FlexBetween>
         </FlexBetween>
-
-        <IconButton>
+        <IconButton
+          onClick={() => {
+            navigator.clipboard.writeText(picturePath);
+            toast.success("copied to clipboard")
+          }}
+        >
           <ShareOutlined />
         </IconButton>
       </FlexBetween>
       {isComments && (
-        <Box mt="0.5rem">
-            {comments.map((comment, i) =>(
-                <Box key={`${name}-${i}`}>
-                    <Divider/>
-                    <Typography sx={{color: main, m: "0.5rem 0", pl: "1rem"}}>
-                        {comment}
-                    </Typography>
-                    </Box>
-            ))}
-            <Divider />
+        <Box
+          mt="0.5rem"
+          sx={{ maxHeight: "250px", overflow: "hidden", overflowY: "scroll" }}
+        >
+          <Box
+            sx={{
+              display: "flex",
+              width: "100%",
+              justifyContent: "space-between",
+            }}
+          >
+            <Input
+              ref={commentref}
+              name="comment"
+              sx={{ display: "block", width: "90%" }}
+            />
+            <Send onClick={createComment} />
+          </Box>
+          {comments.map((comment) => (
+            <Paper style={{ margin: "20px 10px", padding: "20px 10px" }}>
+              <Grid container wrap="nowrap" spacing={1}>
+                <Grid item>
+                  <Avatar alt="javad" src={`${comment?.userId.picturePath}`} />
+                </Grid>
+                <Grid justifyContent="left" item xs zeroMinWidth>
+                  <h4
+                    style={{ margin: 0, textAlign: "left" }}
+                  >{`${comment?.userId.firstName} ${comment?.userId.lastName}`}</h4>
+                  <p style={{ margin: 0, textAlign: "left" }}>
+                    {comment?.comment}
+                  </p>
+                  <p style={{ margin: 0, textAlign: "left", color: "gray" }}>
+                    {format(comment?.time)}
+                  </p>
+                  {loggedInUserId === comment.userId._id && (
+                    <Delete onClick={() => deleteComment(comment)} />
+                  )}
+                </Grid>
+              </Grid>
+            </Paper>
+
+            // <Box key={`${name}-${i}`}>
+            //     <Divider/>
+            //     <Typography sx={{color: main, m: "0.5rem 0", pl: "1rem"}}>
+            //         {comment?.comment}
+            //          {format(comment?.time)}
+            //     </Typography>
+            //     </Box>
+          ))}
+          <Divider />
         </Box>
       )}
     </WidgetWrapper>
