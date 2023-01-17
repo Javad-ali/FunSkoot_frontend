@@ -40,6 +40,7 @@ const PostWidget = ({
   likes,
   comments,
   date,
+  isProfile
 }) => {
   const [isComments, setIsComments] = useState(false);
   const dispatch = useDispatch();
@@ -141,6 +142,7 @@ const PostWidget = ({
           userPicturePath={userPicturePath}
           date={format(date)}
           userId={postUserId}
+          showBtn={!isProfile}
         />
         <FlexBetween>
           <PostMenu id={postId} userid={postUserId} deletePost={deletePost} />
@@ -152,13 +154,14 @@ const PostWidget = ({
       {picturePath && (
         <img
           width="100%"
-          height="auto"
+          height="100%"
           alt="post"
           style={{
             borderRadius: "0.75rem",
             marginTop: "0.75rem",
-            maxHeight: "500px",
-            objectFit: "cover",
+            maxHeight: "700px",
+            objectFit: 'cover',
+            objectPosition: '100% 0'
           }}
           src={`${picturePath}`}
         />
@@ -218,7 +221,7 @@ const PostWidget = ({
                 <Grid item>
                   <Avatar alt="javad" src={`${comment?.userId.picturePath}`} />
                 </Grid>
-                <Grid justifyContent="left" item xs zeroMinWidth>
+                <Grid justifyContent="lefT" item xs zeroMinWidth>
                   <h4
                     style={{ margin: 0, textAlign: "left" }}
                   >{`${comment?.userId.firstName} ${comment?.userId.lastName}`}</h4>

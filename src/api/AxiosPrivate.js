@@ -9,7 +9,7 @@ import { setLogout } from 'state'
 function AxiosPrivate() {
     const token = useSelector(state => state.token)
     const dispatch = useDispatch()
-         const axiosPrivate = axios.create({ baseURL: 'http://localhost:3001/', headers: { Authorization: token } })
+         const axiosPrivate = axios.create({ baseURL: process.env.REACT_APP_BASE_URL, headers: { Authorization: token } })
     axiosPrivate.interceptors.response.use(res => {
         console.log(res)
         return res

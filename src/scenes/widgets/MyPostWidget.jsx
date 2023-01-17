@@ -53,31 +53,35 @@ const MyPostWidget = ({ picturePath }) => {
       },
       (error, result) => {
         if (!error && result && result.event === "success") {
-          // console.log("Done! Here is the image info: ", result.info);
           setImageUrl(result.info.secure_url);
         }
       }
     );
   }, []);
   const handlePost = async () => {
-    const formData = new FormData();
-    formData.append("userId", _id);
-    formData.append("description", post);
-    if (imageUrl) {
-      // formData.append("picture", image);
-      // formData.append("picturePath", image.name);
-      formData.append("picturePath", imageUrl);
+    try {
+      const formData = new FormData();
+      console.log(_id,post)
+      formData.append("userId", _id);
+      formData.append("description", post);
+      if (imageUrl) {
+        formData.append("picturePath", imageUrl);
+      }
+      console.log(formData,_id,post,imageUrl);
+  
+      const response = await axios.post(
+        `/posts`,
+        {userId:_id,description:post,picturePath:imageUrl}
+      );
+      const posts = response.data
+  
+      dispatch(setPosts({ posts }));
+      setImageUrl("");
+      setImage(null);
+      setPost(""); 
+    } catch (error) {
+      console.log(error);
     }
-
-    const response = await axios.post(
-      `/posts`,
-      formData
-    );
-    const posts = response.data
-    dispatch(setPosts({ posts }));
-    setImageUrl("");
-    setImage(null);
-    setPost("");
   };
 
   return (
@@ -98,50 +102,6 @@ const MyPostWidget = ({ picturePath }) => {
           }}
         />
       </FlexBetween>
-      {/* {isImage && (
-        <Box
-          border={`1px solid ${medium}`}
-          borderRadius="5px"
-          mt="1rem"
-          p="1rem"
-        >
-          <Dropzone
-            acceptedFiles=".jpg,.jpeg,.png"
-            multiple={false}
-            onDrop={(acceptedFiles) =>setImage(acceptedFiles[0])}>
-            {({ getRootProps, getInputProps }) => (
-                <FlexBetween>
-              <Box 
-                {...getRootProps()}
-                border={`2px dashed ${palette.primary.main}`}
-                p="1rem"
-                width="100%"
-                sx={{ "&:hover": { cursor: "pointer" } }}
-              >
-                <input {...getInputProps()}  />
-                {! image ? (
-                  <p>Add Image Here</p>
-                ) : (
-                  <FlexBetween>
-                    <Typography>{image.name}</Typography>
-                    <EditOutlined />
-                  </FlexBetween>
-                )}
-              </Box>
-              {image && (
-                <IconButton
-                onClick={()=> setImage(null)}
-                sx={{width: "15%"}}
-                >
-               <DeleteOutlined/>
-                </IconButton>
-              )}
-              </FlexBetween>
-            )}
-          </Dropzone>
-        </Box>
-      )} */}
-
       <Divider sx={{ margin: "1.25rem 0" }} />
 
       <FlexBetween>

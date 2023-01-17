@@ -1,1 +1,1 @@
-export const baseurl ="http://localhost:3001"
+export const baseurl = process.env.REACT_APP_BASE_URL

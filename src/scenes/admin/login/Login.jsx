@@ -11,23 +11,24 @@ import {
   Link,
 } from "@mui/material";
 import LockIcon from "@mui/icons-material/Lock";
-import axios from "axios";
 import { toast } from "react-hot-toast";
 import { useDispatch } from "react-redux";
 import { setAdminLogin } from "state";
 import { useNavigate } from "react-router-dom";
+import AxiosPublic from "api/AxiosPublic";
 
 const Login = () => {
 const [data,setData] = useState({email:'',password:''})
 const dispatch = useDispatch()
 const navigate = useNavigate()
+const axios = AxiosPublic()
 const handleChange =(e)=>{
 setData(prev=>({...prev,[e.target.id]:e.target.value}))
 }
 const handleLogin = async()=>{
     console.log('adfa')
         try {
-            axios.post('http://localhost:3001/admin/login',data).then(e=>{
+            axios.post('/admin/login',data).then(e=>{
                 toast.success('login successfull')
                 dispatch(setAdminLogin(e.data))
                 navigate('/admin/home')

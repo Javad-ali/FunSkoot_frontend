@@ -78,6 +78,7 @@
                 likes={likes}
                 comments={comments}
                 date={createdAt}
+                isProfile={isProfile}
                 />:null
             )
         )}

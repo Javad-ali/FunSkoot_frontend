@@ -15,7 +15,7 @@ import { useDispatch } from "react-redux";
 import { setLogin } from "state";
 import Dropzone from "react-dropzone";
 import FlexBetween from "components/FlexBetween";
-import { toast } from "react-toastify";
+import { toast } from "react-hot-toast";
 import otpApi from "../../api/otpRequest";
 import axios from "axios";
 import AxiosPublic from "api/AxiosPublic";

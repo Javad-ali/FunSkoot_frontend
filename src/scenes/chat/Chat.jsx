@@ -7,6 +7,9 @@ import { useSelector } from "react-redux";
 import Navbar from 'scenes/navbar/Navbar';
 import './Chat.css'
 
+const socket=io.connect(process.env.REACT_APP_BASE_URL)
+
+
 const Chat = () => {
 
     const user =useSelector((state)=>state.user)
@@ -16,29 +19,28 @@ const Chat = () => {
     const [onlineUsers, setOnlineUsers] =useState([]) 
     const [sendMessage, setSendMessage] = useState(null)
     const [recieveMessage, setReciveMessage] = useState(null)
-    const socket = useRef();
+
 
     // sending message to socket server
     useEffect(()=>{
       if(sendMessage!==null){
         console.log("Sending message from client",sendMessage);
-        socket.current.emit('send-message',sendMessage)
+        socket.emit('send-message',sendMessage)
       }
     },[sendMessage])
 
     
     
     useEffect(()=>{
-        socket.current =io('http://localhost:8800'); 
-        socket.current.emit("new-user-add",user._id)
-        socket.current.on('get-users',(users)=>{
+        socket.emit("new-user-add",user._id)
+        socket.on('get-users',(users)=>{
             setOnlineUsers(users);
         })
     },[user])
     
     // receive message from socket server
     useEffect(()=>{
-        socket.current.on("receive-message",(data)=>{
+        socket.on("receive-message",(data)=>{
             console.log("Data received in parent Chat.jsx",data);
             setReciveMessage(data)
         })

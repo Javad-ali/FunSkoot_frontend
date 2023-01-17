@@ -72,9 +72,9 @@ const user = friendId || userId
         </Box>
       </FlexBetween>
       {showBtn &&
-     (
+    (
      <>
-      {!(user === _id) &&
+      {(user !== _id) &&
       <IconButton onClick={()=>patchFriend()} 
       sx={{ backgroundColor: primaryLight, p: "0.6rem" }}>
         
@@ -84,7 +84,8 @@ const user = friendId || userId
       }
       </> 
       )
-}
+    }
+{/* } */}
     </FlexBetween>
   );
 };
